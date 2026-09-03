@@ -425,6 +425,48 @@
       font-size: 14px;
     }
 
+        .fpbf-spam-alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding: 16px 18px;
+      border-radius: 10px;
+      background: #fff4e0;
+      border: 2px solid #f0b429;
+      animation: fpbf-spam-pulse 1.8s ease-in-out infinite;
+    }
+
+    .fpbf-spam-alert-icon {
+      font-size: 26px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .fpbf-spam-alert-title {
+      margin: 0 0 4px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #7a4a00;
+    }
+
+    .fpbf-spam-alert-text {
+      margin: 0;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: #5c3b00;
+    }
+
+    @keyframes fpbf-spam-pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(240, 180, 41, 0.35);
+      }
+      50% {
+        box-shadow: 0 0 0 6px rgba(240, 180, 41, 0);
+      }
+    }
+    
+
     .fpbf-second-version {
       display: none;
       margin-top: 20px;
@@ -1629,7 +1671,22 @@
 
     function exibirResultadoEnvio(dados) {
 
-      resultadoEnvio.innerHTML = `
+            resultadoEnvio.innerHTML = `
+        <div class="fpbf-spam-alert">
+          <div class="fpbf-spam-alert-icon">📩⚠️</div>
+          <div>
+            <p class="fpbf-spam-alert-title">
+              Não recebeu o e-mail? Olhe na caixa de Spam/Lixo Eletrônico!
+            </p>
+            <p class="fpbf-spam-alert-text">
+              Nosso e-mail de confirmação pode cair no spam do seu provedor.
+              Verifique lá e marque como "Não é spam" para garantir que os
+              próximos avisos (parecer, correções, etc.) cheguem certinho
+              na sua caixa de entrada.
+            </p>
+          </div>
+        </div>
+
         <div class="fpbf-result-grid">
 
           <div class="fpbf-result-item full">
