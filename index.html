@@ -760,15 +760,39 @@
 /* Refinamento visual — versão final */
 :root {
   --shadow-soft: 0 8px 28px rgba(36, 28, 24, .08);
-  --shadow-card: 0 2px 10px rgba(36, 28, 24, .05);
+  --shadow-card: 0 3px 14px rgba(36, 28, 24, .06);
 }
+
+/* Cartões do detalhe: espaçamento interno consistente */
 .bloco {
   border-radius: 16px;
   box-shadow: var(--shadow-card);
   border: 1px solid rgba(128, 110, 96, .16);
   background: rgba(255,255,255,.98);
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  overflow: hidden;
 }
-.bloco h3 { letter-spacing: -.01em; }
+.bloco h3 {
+  letter-spacing: .015em;
+  margin: 0 0 16px;
+  line-height: 1.2;
+}
+.bloco .linha-info { padding: 9px 0; }
+.bloco .campo { margin-bottom: 16px; }
+.bloco .campo:last-of-type { margin-bottom: 0; }
+.bloco iframe { display:block; }
+.bloco > a, .bloco > div > a { line-height:1.4; }
+
+/* O botão final pertence ao cartão, não à borda da página */
+.acao-final-avaliacao {
+  margin: 24px -24px -22px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--fpbf-border);
+  background: #fcfbf9;
+  display: flex;
+  justify-content: flex-end;
+}
 .campo label { font-weight: 650; letter-spacing: -.005em; }
 .campo input, .campo select, .campo textarea, .barra-filtros input, .barra-filtros select {
   border-radius: 11px !important;
@@ -781,13 +805,6 @@
 }
 .btn { border-radius: 11px; font-weight: 650; transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease; }
 .btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(36,28,24,.12); }
-.acao-final-avaliacao {
-  margin-top: 26px;
-  padding-top: 22px;
-  border-top: 1px solid var(--fpbf-border);
-  display: flex;
-  justify-content: flex-end;
-}
 .btn-acao-final {
   width: auto !important;
   min-width: 230px;
@@ -798,8 +815,14 @@
 .fluxo-aviso { border-radius: 12px; line-height: 1.55; }
 #painel-detalhe .painel-corpo { scroll-behavior: smooth; }
 @media (max-width: 720px) {
-  .acao-final-avaliacao { justify-content: stretch; }
+  .bloco { padding: 18px 16px; border-radius: 14px; }
+  .acao-final-avaliacao {
+    margin: 20px -16px -18px;
+    padding: 16px;
+    justify-content: stretch;
+  }
   .btn-acao-final { width: 100% !important; min-width: 0; }
+  .linha-info { gap: 18px; }
 }
 
 </style>
