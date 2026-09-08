@@ -500,6 +500,94 @@
       }
     }
 
+
+    /* =========================================================
+       CONTROLE DO PERÍODO DE SUBMISSÕES
+    ========================================================= */
+
+    .fpbf-period-loading #form-submissao {
+      display: none;
+    }
+
+    .fpbf-tab-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+      background: #f3f3f3;
+      color: #777;
+    }
+
+    .fpbf-tab-button.is-active:disabled {
+      background: var(--fpbf-primary);
+      color: #fff;
+      opacity: 0.72;
+    }
+
+    .fpbf-period-card {
+      display: none;
+      padding: 22px;
+      border: 1px solid var(--fpbf-border);
+      border-radius: 12px;
+      background: #fafafa;
+    }
+
+    .fpbf-period-card.is-visible {
+      display: block;
+    }
+
+    .fpbf-period-card.is-loading {
+      min-height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fpbf-period-spinner {
+      width: 38px;
+      height: 38px;
+      border: 4px solid #e5e7eb;
+      border-top-color: var(--fpbf-primary);
+      border-radius: 50%;
+      animation: fpbf-period-spin 0.75s linear infinite;
+    }
+
+    @keyframes fpbf-period-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .fpbf-period-title {
+      margin: 0 0 10px;
+      color: var(--fpbf-primary);
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .fpbf-period-text {
+      margin: 0;
+      color: #4b4b4b;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .fpbf-period-dates {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-left: 4px solid var(--fpbf-primary);
+      background: #fff;
+      color: #444;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .fpbf-period-actions {
+      margin-top: 18px;
+    }
+
+    .fpbf-period-actions .fpbf-button {
+      min-width: 220px;
+    }
+
     @media (max-width: 680px) {
       .fpbf-content {
         padding: 20px 16px;
@@ -528,7 +616,7 @@
   </style>
 </head>
 
-<body>
+<body class="fpbf-period-loading">
 
   <div class="fpbf-page">
     <div class="fpbf-shell">
@@ -556,6 +644,7 @@
 
           <button
             type="button"
+            id="tab-envio"
             class="fpbf-tab-button is-active"
             data-panel="panel-envio"
           >
@@ -564,6 +653,7 @@
 
           <button
             type="button"
+            id="tab-consulta"
             class="fpbf-tab-button"
             data-panel="panel-consulta"
           >
@@ -586,6 +676,52 @@
             <h2 class="fpbf-section-title">
               Nova submissão
             </h2>
+
+            <div
+              id="estado-periodo"
+              class="fpbf-period-card is-loading"
+              aria-live="polite"
+              aria-busy="true"
+            >
+              <div
+                id="estado-periodo-spinner"
+                class="fpbf-period-spinner"
+                role="status"
+                aria-label="Carregando"
+              ></div>
+
+              <h2
+                id="estado-periodo-titulo"
+                class="fpbf-period-title"
+                hidden
+              ></h2>
+
+              <p
+                id="estado-periodo-texto"
+                class="fpbf-period-text"
+                hidden
+              ></p>
+
+              <div
+                id="estado-periodo-datas"
+                class="fpbf-period-dates"
+                hidden
+              ></div>
+
+              <div
+                id="estado-periodo-acoes"
+                class="fpbf-period-actions"
+                hidden
+              >
+                <button
+                  type="button"
+                  id="btn-ir-acompanhar"
+                  class="fpbf-button fpbf-button-primary"
+                >
+                  Acompanhar uma submissão
+                </button>
+              </div>
+            </div>
 
             <form id="form-submissao" novalidate>
 
@@ -1024,7 +1160,7 @@
 
     // Cole aqui a URL do deploy (.../exec) do seu Apps Script
     const API_URL =
-      'https://script.google.com/macros/s/AKfycbyD0moP56rbEoVmBmleya2ZGqjstsR3_9mBvAco4pd8X7V5NKvG5NHX4_BEt3rAOZQucQ/exec';
+      'https://script.google.com/macros/s/AKfycbxsz0BY4BWK28oa3rftQrCm_4Z6C1JoRnn_xrTrB0mVD2xAzH_dsvjOiqs_IPwRMML4aA/exec';
 
 
     // Faz a chamada à API. Não definimos Content-Type como
@@ -1094,7 +1230,8 @@
       MIME_DOCX:
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 
-      consultaAtual: null
+      consultaAtual: null,
+      periodoSubmissao: null
     };
 
 
@@ -1102,32 +1239,223 @@
     // ABAS
     // =========================================================
 
+    function ativarAba(panelId) {
+
+      const botao = document.querySelector(
+        '.fpbf-tab-button[data-panel="' + panelId + '"]'
+      );
+
+      if (!botao || botao.disabled) {
+        return;
+      }
+
+      document
+        .querySelectorAll('.fpbf-tab-button')
+        .forEach(function(item) {
+          item.classList.remove('is-active');
+        });
+
+      document
+        .querySelectorAll('.fpbf-panel')
+        .forEach(function(item) {
+          item.classList.remove('is-active');
+        });
+
+      botao.classList.add('is-active');
+
+      document
+        .getElementById(panelId)
+        .classList.add('is-active');
+    }
+
+
     document
       .querySelectorAll('.fpbf-tab-button')
       .forEach(function(botao) {
 
         botao.addEventListener('click', function() {
-
-          document
-            .querySelectorAll('.fpbf-tab-button')
-            .forEach(function(item) {
-              item.classList.remove('is-active');
-            });
-
-          document
-            .querySelectorAll('.fpbf-panel')
-            .forEach(function(item) {
-              item.classList.remove('is-active');
-            });
-
-          botao.classList.add('is-active');
-
-          document
-            .getElementById(botao.dataset.panel)
-            .classList.add('is-active');
+          ativarAba(botao.dataset.panel);
         });
 
       });
+
+
+    // =========================================================
+    // PERÍODO DE SUBMISSÕES
+    // =========================================================
+
+    const tabEnvio =
+      document.getElementById('tab-envio');
+
+    const tabConsulta =
+      document.getElementById('tab-consulta');
+
+    const formSubmissaoPeriodo =
+      document.getElementById('form-submissao');
+
+    const estadoPeriodo =
+      document.getElementById('estado-periodo');
+
+    const estadoPeriodoSpinner =
+      document.getElementById('estado-periodo-spinner');
+
+    const estadoPeriodoTitulo =
+      document.getElementById('estado-periodo-titulo');
+
+    const estadoPeriodoTexto =
+      document.getElementById('estado-periodo-texto');
+
+    const estadoPeriodoDatas =
+      document.getElementById('estado-periodo-datas');
+
+    const estadoPeriodoAcoes =
+      document.getElementById('estado-periodo-acoes');
+
+    const btnIrAcompanhar =
+      document.getElementById('btn-ir-acompanhar');
+
+
+    function formatarDataPeriodo(valor) {
+
+      if (!valor) return '';
+
+      const data = new Date(valor);
+
+      if (Number.isNaN(data.getTime())) {
+        return '';
+      }
+
+      return new Intl.DateTimeFormat('pt-BR', {
+        dateStyle: 'short',
+        timeStyle: 'short'
+      }).format(data);
+    }
+
+
+    function montarTextoDatasPeriodo(config) {
+
+      const inicio = formatarDataPeriodo(config.inicio);
+      const fim = formatarDataPeriodo(config.fim);
+
+      if (!inicio && !fim) {
+        return '';
+      }
+
+      if (inicio && fim) {
+        return 'Período: de ' + inicio + ' até ' + fim + '.';
+      }
+
+      if (inicio) {
+        return 'Início das submissões: ' + inicio + '.';
+      }
+
+      return 'Encerramento das submissões: ' + fim + '.';
+    }
+
+
+    function aplicarEstadoPeriodo(config) {
+
+      FPBF.periodoSubmissao = config;
+
+      document.body.classList.remove('fpbf-period-loading');
+
+      estadoPeriodo.classList.remove('is-loading');
+      estadoPeriodo.setAttribute('aria-busy', 'false');
+      estadoPeriodoSpinner.hidden = true;
+      estadoPeriodoTitulo.hidden = false;
+      estadoPeriodoTexto.hidden = false;
+      estadoPeriodoAcoes.hidden = true;
+
+      const textoDatas = montarTextoDatasPeriodo(config);
+
+      if (textoDatas) {
+        estadoPeriodoDatas.textContent = textoDatas;
+        estadoPeriodoDatas.hidden = false;
+      } else {
+        estadoPeriodoDatas.textContent = '';
+        estadoPeriodoDatas.hidden = true;
+      }
+
+      if (config.estado === 'nao_aberto') {
+
+        formSubmissaoPeriodo.style.display = 'none';
+        estadoPeriodo.classList.add('is-visible');
+
+        estadoPeriodoTitulo.textContent =
+          'O período de submissões ainda não foi aberto';
+
+        estadoPeriodoTexto.textContent =
+          'As submissões ainda não estão disponíveis. Retorne a esta página após a data de abertura informada.';
+
+        tabEnvio.disabled = false;
+        tabConsulta.disabled = true;
+
+        ativarAba('panel-envio');
+        return;
+      }
+
+      if (config.estado === 'encerrado') {
+
+        formSubmissaoPeriodo.style.display = 'none';
+        estadoPeriodo.classList.add('is-visible');
+
+        estadoPeriodoTitulo.textContent =
+          'As submissões foram encerradas';
+
+        estadoPeriodoTexto.textContent =
+          'O período para novas submissões foi encerrado. Se você já enviou um trabalho, ainda pode acompanhar o andamento da sua submissão.';
+
+        estadoPeriodoAcoes.hidden = false;
+
+        tabEnvio.disabled = false;
+        tabConsulta.disabled = false;
+
+        ativarAba('panel-envio');
+        return;
+      }
+
+      formSubmissaoPeriodo.style.display = '';
+      estadoPeriodo.classList.remove('is-visible');
+
+      tabEnvio.disabled = false;
+      tabConsulta.disabled = false;
+    }
+
+
+    async function carregarConfiguracoes() {
+
+      try {
+
+        const resposta = await chamarAPI({
+          action: 'obterConfiguracoes'
+        });
+
+        if (
+          !resposta ||
+          !resposta.sucesso ||
+          !resposta.submissoes
+        ) {
+          throw new Error('Configuração do período indisponível.');
+        }
+
+        aplicarEstadoPeriodo(resposta.submissoes);
+
+      } catch (erro) {
+
+        // Fallback: mantém o formulário utilizável. O Apps Script
+        // continua sendo a validação definitiva do período.
+        aplicarEstadoPeriodo({
+          estado: 'aberto',
+          inicio: null,
+          fim: null
+        });
+      }
+    }
+
+
+    btnIrAcompanhar.addEventListener('click', function() {
+      ativarAba('panel-consulta');
+    });
 
 
     // =========================================================
@@ -1638,6 +1966,14 @@
 
         event.preventDefault();
 
+        if (
+          FPBF.periodoSubmissao &&
+          FPBF.periodoSubmissao.estado !== 'aberto'
+        ) {
+          aplicarEstadoPeriodo(FPBF.periodoSubmissao);
+          return;
+        }
+
         limparMensagem(mensagemEnvio);
         resultadoEnvio.classList.remove('is-visible');
 
@@ -1759,7 +2095,7 @@
 
       resultadoEnvio.innerHTML = `
         <div class="fpbf-spam-alert">
-          <div class="fpbf-spam-alert-icon">📩⚠️</div>
+          <div class="fpbf-spam-alert-icon" aria-hidden="true">!</div>
           <div>
             <p class="fpbf-spam-alert-title">
               Não recebeu o e-mail? Olhe na caixa de Spam/Lixo Eletrônico!
@@ -2414,6 +2750,9 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
+
+
+    carregarConfiguracoes();
 
   </script>
 
