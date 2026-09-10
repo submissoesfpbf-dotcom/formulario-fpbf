@@ -1160,7 +1160,7 @@
 
     // Cole aqui a URL do deploy (.../exec) do seu Apps Script
     const API_URL =
-      'https://script.google.com/macros/s/AKfycbxsz0BY4BWK28oa3rftQrCm_4Z6C1JoRnn_xrTrB0mVD2xAzH_dsvjOiqs_IPwRMML4aA/exec';
+      'https://script.google.com/macros/s/AKfycbwIrF87FmM7lC6qdsnlllYsT4ZNS4_VHgqBwmyCDFrI2269pyzMogx0B95olNoo-UecpQ/exec';
 
 
     // Faz a chamada à API. Não definimos Content-Type como
@@ -1178,11 +1178,19 @@
 
           const controlador = new AbortController();
 
-          // cancela a chamada se passar de 20 segundos, pra não
-          // deixar o usuário esperando indefinidamente
+          // Envios de arquivo podem levar mais tempo no Apps Script.
+          // Consultas continuam com timeout menor.
+          const timeoutMs =
+            corpo && (
+              corpo.action === 'enviarSubmissao' ||
+              corpo.action === 'enviarSegundaVersao'
+            )
+              ? 60000
+              : 20000;
+
           const timeout = setTimeout(
             () => controlador.abort(),
-            20000
+            timeoutMs
           );
 
           const resposta = await fetch(API_URL, {
@@ -1201,7 +1209,23 @@
             );
           }
 
-          return await resposta.json();
+          const dadosResposta = await resposta.json();
+
+          // Se outra tentativa da mesma submissão ainda estiver sendo
+          // processada no servidor, aguarda e consulta novamente usando
+          // a MESMA chave de idempotência, sem criar novo registro.
+          if (
+            dadosResposta &&
+            dadosResposta.emProcessamento &&
+            i < tentativas
+          ) {
+            await new Promise(
+              resolve => setTimeout(resolve, 2500 * i)
+            );
+            continue;
+          }
+
+          return dadosResposta;
 
         } catch (erro) {
 
@@ -2023,10 +2047,19 @@
           };
 
 
+          // Identificador único criado UMA vez por clique de envio.
+          // Se o fetch precisar ser repetido, todas as tentativas usam
+          // esta mesma chave e o backend devolve a submissão já criada.
+          const idRequisicao =
+            (window.crypto && typeof window.crypto.randomUUID === 'function')
+              ? window.crypto.randomUUID()
+              : 'fpbf-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+
           const resposta = await chamarAPI({
             action: 'enviarSubmissao',
+            idRequisicao: idRequisicao,
             dados: dados
-          });
+          }, 4);
 
           definirCarregando(
             btnEnviar,
